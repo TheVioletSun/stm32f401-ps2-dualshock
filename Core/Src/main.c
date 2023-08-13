@@ -47,7 +47,6 @@ int main(void)
 
 
 
-	/* USER CODE BEGIN SysInit */
 
 	GPIO_InitTypeDef GPIO_InitStruct = {0};
 
