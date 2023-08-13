@@ -19,43 +19,13 @@
 #include <stdio.h>
 #include "main.h"
 #include "stm32f4xx_hal_uart.h"
-#include "porting_spi.h"
+//#include "porting_spi.h"
 #include "ps2_dualshock_spi.h"
 
-/* Buffers for control polling */
-uint8_t poll[21] = {
-	0x01, 0x42, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-};
-uint8_t poll_r[21];
 
-uint8_t enter_config[5] = {
-	0x01, 0x43, 0x00, 0x01, 0x00
-};
-uint8_t enter_config_r[5];
-
-uint8_t enable_analog[9] = {
-	0x01, 0x43, 0x00, 0x01, 0x03, 0x00, 0x00, 0x00, 0x00
-};
-uint8_t enable_analog_r[9];
-
-uint8_t motor_mapping[9] = {
-	0x01, 0x4D, 0x00, 0x00, 0x01, 0xFF, 0xFF, 0xFF, 0xFF
-};
-uint8_t motor_mapping_r[9];
-
-uint8_t enable_pressure_values[9] = {
-	0x01, 0x4F, 0x00, 0xFF, 0xFF, 0x03, 0x00, 0x00, 0x00
-};
-uint8_t enable_pressure_values_r[9];
-
-uint8_t exit_config[9] = {
-	0x01, 0x4F, 0x00, 0xFF, 0xFF, 0x03, 0x00, 0x00, 0x00
-};
-uint8_t exit_config_r[9];
 
 SPI_HandleTypeDef spi_h;
+ps2_dualshock_dev ps2_dev;
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
@@ -155,21 +125,9 @@ int main(void)
 		Error_Handler();
 	}
 
-
-	/* Configuration */
-	HAL_GPIO_TogglePin (GPIOC, GPIO_PIN_13);
-
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET); // NSS low
-	HAL_Delay (1);
-	HAL_SPI_TransmitReceive(&spi_h, poll, poll_r, 21, 20);
-	while(spi_h.State == HAL_SPI_STATE_BUSY);  // wait for xmission complete
-	HAL_Delay (1);
-	HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET); // NSS high
-
-
-
-
 	//HAL_SPI_MspInit(&spi_h);
+	ps2_init(&ps2_dev, &spi_h);
+
 
 	char idle[15] = "Idle \r\n~";
 	char forward[15] = "Forward \r\n~";
@@ -182,6 +140,8 @@ int main(void)
 
 		char *current_p = idle;
 
+		ps2_main_exchange(&ps2_dev);
+/*
 		HAL_GPIO_TogglePin (GPIOC, GPIO_PIN_13);
 
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET); // NSS low
@@ -190,7 +150,9 @@ int main(void)
 		while(spi_h.State == HAL_SPI_STATE_BUSY);  // wait for xmission complete
 		HAL_Delay (1);
 		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET); // NSS high
+*/
 
+/*
 		//if (RX[3] == 0xFF)
 		//	current_p = idle;
 		if (poll[3] == 0xEF)
@@ -202,7 +164,7 @@ int main(void)
 		else if (poll[3] == 0xDF)
 			current_p = right;
 
-
+*/
 		if(current_p != idle) {
 			while(*current_p != '~'){
 				putchar_uart((uint8_t *)current_p, &uart_h);
@@ -210,23 +172,7 @@ int main(void)
 			}
 			HAL_Delay(300);
 		}
-
-		/*
-		//Easy way to receive/transmit fixed length strings
-
-		uint8_t str[15];
-		if(HAL_UART_Receive(&uart_h, (uint8_t *)str, 14, 0xFFFF) == HAL_OK) {
-
-		if(HAL_UART_Transmit(&uart_h, (uint8_t *)str, 14, 0xFFFF) != HAL_OK)
-		Error_Handler();
-		}
-		 */
-		/*
-		   uint8_t char_bits;
-		   getchar_uart(&char_bits, &uart_h);
-		   putchar_uart(&char_bits, &uart_h);
-		 */
-		HAL_Delay (10);   /* Insert delay 5000 ms */
+		//HAL_Delay (10);   /* Insert delay 5000 ms */
 	}
 }
 
