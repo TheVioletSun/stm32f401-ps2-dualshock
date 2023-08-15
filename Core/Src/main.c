@@ -128,48 +128,76 @@ int main(void)
 	ps2_init(&ps2_dev, &spi_h);
 
 
-	char idle[15] = "Idle \r\n~";
-	char forward[15] = "Forward \r\n~";
-	char back[15] = "Backward \r\n~";
-	char left[15] = "Left \r\n~";
-	char right[15] = "Right \r\n~";
+	char idle[20] = "Idle \r\n~";
+	char up[20] = "Up \r\n~";
+	char down[20] = "Down \r\n~";
+	char left[20] = "Left \r\n~";
+	char right[20] = "Right \r\n~";
+	char cross[20] = "cross \r\n~";
+	char circle[20] = "circle \r\n~";
+	char square[20] = "square \r\n~";
+	char triangle[20] = "triangle \r\n~";
+	char start[20] = "start \r\n~";
+	char select[20] = "select \r\n~";
+	char l_trigger[20] = "l_trigger \r\n~";
+	char r_trigger[20] = "r_trigger \r\n~";
+	char l_shift[20] = "l_shift \r\n~";
+	char r_shift[20] = "r_shift \r\n~";
+	char l_stick_press[20] = "l_stick_press \r\n~";
+	char r_stick_press[20] = "r_stick_press \r\n~";
+
 
 	while (1)
 	{
 
 		char *current_p = idle;
 
-		ps2_main_exchange(&ps2_dev);
-/*
-		HAL_GPIO_TogglePin (GPIOC, GPIO_PIN_13);
+		if(ps2_main_exchange(&ps2_dev) != 0)
+			continue;
 
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET); // NSS low
-		HAL_Delay (1);
-		HAL_SPI_TransmitReceive(&spi_h, poll, poll_r, 21, 20);
-		while(spi_h.State == HAL_SPI_STATE_BUSY);  // wait for xmission complete
-		HAL_Delay (1);
-		HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_SET); // NSS high
-*/
+		if(ps2_dev.state->is_idle == 1)
+			continue;
 
-/*
-		//if (RX[3] == 0xFF)
-		//	current_p = idle;
-		if (poll[3] == 0xEF)
-			current_p = forward;
-		else if (poll[3] == 0xBF)
-			current_p = back;
-		else if (poll[3] == 0x7F)
+
+		if (ps2_dev.state->up)
+			current_p = up;
+		else if (ps2_dev.state->down)
+			current_p = down;
+		else if (ps2_dev.state->left)
 			current_p = left;
-		else if (poll[3] == 0xDF)
+		else if (ps2_dev.state->right)
 			current_p = right;
+		else if (ps2_dev.state->cross)
+			current_p = cross;
+		else if (ps2_dev.state->circle)
+			current_p = circle;
+		else if (ps2_dev.state->square)
+			current_p = square;
+		else if (ps2_dev.state->triangle)
+			current_p = triangle;
+		else if (ps2_dev.state->start)
+			current_p = start;
+		else if (ps2_dev.state->select)
+			current_p = select;
+		else if (ps2_dev.state->l_trigger)
+			current_p = l_trigger;
+		else if (ps2_dev.state->r_trigger)
+			current_p = r_trigger;
+		else if (ps2_dev.state->l_shift)
+			current_p = l_shift;
+		else if (ps2_dev.state->r_shift)
+			current_p = r_shift;
+		else if (ps2_dev.state->l_stick_press)
+			current_p = l_stick_press;
+		else if (ps2_dev.state->r_stick_press)
+			current_p = r_stick_press;
 
-*/
 		if(current_p != idle) {
 			while(*current_p != '~'){
 				putchar_uart((uint8_t *)current_p, &uart_h);
 				current_p++;
 			}
-			HAL_Delay(300);
+			HAL_Delay(20);
 		}
 		//HAL_Delay (10);   /* Insert delay 5000 ms */
 	}
