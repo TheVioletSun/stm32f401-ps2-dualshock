@@ -1,2 +1,0 @@
-../Core/Src/porting_spi.c:12:6:delay_ms	16	static
-../Core/Src/porting_spi.c:17:9:tx_rx	32	static
