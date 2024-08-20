@@ -55,7 +55,7 @@ int main(void)
 	/* Enable GPIO TX/RX clock */
 	__HAL_RCC_USART1_CLK_ENABLE();	// enable usart1 clock
 	__HAL_RCC_GPIOA_CLK_ENABLE();		// enable gpioa clock (for PA9 and PA10,
-	// which are usart1 rx and tx
+						// which are usart1 rx and tx
 
 	/*##-2- Configure peripheral GPIO ##########################################*/
 	/* UART TX GPIO pin configuration  */
@@ -126,7 +126,7 @@ int main(void)
 
 	//HAL_SPI_MspInit(&spi_h);
 	ps2_init(&ps2_dev, &spi_h);
-
+	
 
 	char idle[20] = "Idle \r\n~";
 	char up[20] = "Up \r\n~";
@@ -146,6 +146,17 @@ int main(void)
 	char l_stick_press[20] = "l_stick_press \r\n~";
 	char r_stick_press[20] = "r_stick_press \r\n~";
 
+	uint8_t large_motor_value = 0x00;
+
+	uint8_t l_stick_up = 0;
+	uint8_t l_stick_down = 0;
+	uint8_t l_stick_left = 0;
+	uint8_t l_stick_right = 0;
+	uint8_t r_stick_up = 0;
+	uint8_t r_stick_down = 0;
+	uint8_t r_stick_left = 0;
+	uint8_t r_stick_right = 0;
+
 
 	while (1)
 	{
@@ -155,19 +166,34 @@ int main(void)
 		if(ps2_main_exchange(&ps2_dev) != 0)
 			continue;
 
-		if(ps2_dev.state->is_idle == 1)
+		if(ps2_buttons_idle(&ps2_dev) && ps2_sticks_idle(&ps2_dev))
 			continue;
 
+		l_stick_up = ps2_l_stick_up(&ps2_dev);
+		l_stick_down = ps2_l_stick_down(&ps2_dev);
+		l_stick_left = ps2_l_stick_left(&ps2_dev);
+		l_stick_right = ps2_l_stick_right(&ps2_dev);
+		r_stick_up = ps2_r_stick_up(&ps2_dev);
+		r_stick_down = ps2_r_stick_down(&ps2_dev);
+		r_stick_left = ps2_r_stick_left(&ps2_dev);
+		r_stick_right = ps2_r_stick_right(&ps2_dev);
 
-		if (ps2_dev.state->up)
+
+		if (ps2_any_button_pressed(&ps2_dev, UP_BUTTON)) {
 			current_p = up;
-		else if (ps2_dev.state->down)
+			ps2_small_motor(true);
+		} else if (ps2_any_button_pressed(&ps2_dev, DOWN_BUTTON)) {
 			current_p = down;
-		else if (ps2_dev.state->left)
+			ps2_small_motor(false);
+		} else if (ps2_any_button_pressed(&ps2_dev, LEFT_BUTTON)) {
 			current_p = left;
-		else if (ps2_dev.state->right)
+			large_motor_value = 0x00;
+			ps2_large_motor(large_motor_value);
+		} else if (ps2_any_button_pressed(&ps2_dev, RIGHT_BUTTON)) {
 			current_p = right;
-		else if (ps2_dev.state->cross)
+			large_motor_value += 0x01;
+			ps2_large_motor(large_motor_value);
+		}/* else if (ps2_dev.state->cross)
 			current_p = cross;
 		else if (ps2_dev.state->circle)
 			current_p = circle;
@@ -191,7 +217,7 @@ int main(void)
 			current_p = l_stick_press;
 		else if (ps2_dev.state->r_stick_press)
 			current_p = r_stick_press;
-
+*/
 		if(current_p != idle) {
 			while(*current_p != '~'){
 				putchar_uart((uint8_t *)current_p, &uart_h);
@@ -199,6 +225,7 @@ int main(void)
 			}
 			HAL_Delay(20);
 		}
+
 		//HAL_Delay (10);   /* Insert delay 5000 ms */
 	}
 }
